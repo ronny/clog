@@ -29,13 +29,9 @@ const (
 // as per
 // https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#LogSeverity
 //
-// If the level is between named values, then an integer is appended to the
-// uppercased name.
-//
 // Examples:
 //
 //	LevelName(LevelWarning) => "WARNING"
-//	LevelName(LevelNotice+1) => "NOTICE+1"
 func LevelName(l slog.Level) string {
 	str := func(base string, val slog.Level) string {
 		if val == 0 {

@@ -13,6 +13,8 @@ import (
 )
 
 func TestNewHandler(t *testing.T) {
+	t.Parallel()
+
 	buf := strings.Builder{}
 
 	handler := clog.NewHandler(&buf, &clog.HandlerOptions{
@@ -24,7 +26,7 @@ func TestNewHandler(t *testing.T) {
 
 	logger.Debug("this is debug")
 
-	logger.Info("this is info",
+	logger.Warn("this is warn",
 		"foo", "bar",
 		"level", 42,
 		clog.TraceKey, "fish",
@@ -44,40 +46,40 @@ func TestNewHandler(t *testing.T) {
 	// 2 because the debug one shouldn't be written, since handler level is set to info
 	assert.Equal(t, 2, len(lines))
 
-	var infoEntry Entry
-	err := json.Unmarshal([]byte(lines[0]), &infoEntry)
+	var warnEntry Entry
+	err := json.Unmarshal([]byte(lines[0]), &warnEntry)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ts, hasTime := infoEntry.GetString(slog.TimeKey)
+	ts, hasTime := warnEntry.GetString(slog.TimeKey)
 	assert.True(t, hasTime)
 	assert.NotEmpty(t, ts)
 
-	sev, hasSev := infoEntry.GetString(clog.SeverityKey)
+	sev, hasSev := warnEntry.GetString(clog.SeverityKey)
 	assert.True(t, hasSev)
-	assert.Equal(t, clog.LevelName(clog.LevelInfo), sev)
+	assert.Equal(t, clog.LevelName(clog.LevelWarning), sev)
 
-	source, hasSource := infoEntry.GetMap(clog.SourceLocationKey)
+	source, hasSource := warnEntry.GetMap(clog.SourceLocationKey)
 	assert.True(t, hasSource)
 	assert.NotEmpty(t, source["function"])
 	assert.NotEmpty(t, source["file"])
 	assert.NotEmpty(t, source["line"])
 
-	msg, hasMsg := infoEntry.GetString(clog.MessageKey)
+	msg, hasMsg := warnEntry.GetString(clog.MessageKey)
 	assert.True(t, hasMsg)
-	assert.Equal(t, "this is info", msg)
+	assert.Equal(t, "this is warn", msg)
 
-	foo, hasFoo := infoEntry.GetString("foo")
+	foo, hasFoo := warnEntry.GetString("foo")
 	assert.True(t, hasFoo)
 	assert.Equal(t, "bar", foo)
 
 	// custom "level" vs severity
-	level, hasLevel := infoEntry.GetAny("level")
+	level, hasLevel := warnEntry.GetAny("level")
 	assert.True(t, hasLevel)
 	assert.Equal(t, float64(42), level) // float64 because json
 
-	trace, hasTrace := infoEntry.GetString(clog.TraceKey)
+	trace, hasTrace := warnEntry.GetString(clog.TraceKey)
 	assert.True(t, hasTrace)
 	assert.Equal(t, "fish", trace)
 
