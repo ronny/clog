@@ -3,9 +3,9 @@
 A lightweight `log/slog.JSONHandler` wrapper that adapts the JSON log fields
 to the Google Cloud Logging structured log format.
 
-The handler merely reformats/renames the structured JSON log fields. It's still `JSONandler` under the hood. It does NOT send logs to Cloud Logging directly (e.g. using the Cloud SDK).
+The handler merely reformats/renames the structured JSON log fields. It's still `JSONHandler` under the hood. It does NOT send logs to Cloud Logging directly (e.g. using the Cloud SDK).
 
-The intended use case is Cloud Run, but it should work in similar environments (e.g. App Engine, Cloud Functions).
+The intended use case is Cloud Run, but it should work in similar environments (e.g. App Engine, Cloud Functions) as well.
 
 ## Usage
 
