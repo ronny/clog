@@ -1,11 +1,18 @@
 # clog
 
-A lightweight `log/slog.JSONHandler` wrapper that adapts the JSON log fields
-to the Google Cloud Logging structured log format.
+[![Go Reference](https://pkg.go.dev/badge/github.com/ronny/clog.svg)](https://pkg.go.dev/github.com/ronny/clog)
 
-The handler merely reformats/renames the structured JSON log fields. It's still `JSONHandler` under the hood. It does NOT send logs to Cloud Logging directly (e.g. using the Cloud SDK).
+A lightweight [`log/slog.JSONHandler`](https://pkg.go.dev/log/slog#JSONHandler)
+wrapper that adapts the fields to the [Google Cloud Logging structured log
+format](https://cloud.google.com/logging/docs/structured-logging#structured_logging_special_fields).
 
-The intended use case is Cloud Run, but it should work in similar environments (e.g. App Engine, Cloud Functions) as well.
+The handler merely reformats/renames the structured JSON log fields. It's
+still `JSONHandler` under the hood. It does NOT send logs to Cloud Logging
+directly (e.g. using the Cloud SDK).
+
+The intended use case is Cloud Run, but it should work in similar environments
+where logs are emitted to stdout/stderr and automatically picked up by Cloud
+Logging (e.g. App Engine, Cloud Functions, GKE).
 
 ## Usage
 
