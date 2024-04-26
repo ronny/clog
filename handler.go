@@ -12,6 +12,9 @@ type HandlerOptions = slog.HandlerOptions
 //
 // Basically it replaces `opts.ReplaceAttr` with [ReplaceAttr].
 func NewHandler(w io.Writer, opts *HandlerOptions) *slog.JSONHandler {
+	if opts == nil {
+		opts = &HandlerOptions{}
+	}
 	opts.ReplaceAttr = ReplaceAttr
 	return slog.NewJSONHandler(w, opts)
 }
