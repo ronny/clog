@@ -3,7 +3,6 @@ package clog_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"strings"
 	"testing"
@@ -17,10 +16,21 @@ func TestNewHandler(t *testing.T) {
 
 	buf := strings.Builder{}
 
-	handler := clog.NewHandler(&buf, &clog.HandlerOptions{
-		AddSource: true,
-		Level:     clog.LevelInfo,
+	_, err := clog.NewHandler(&buf, clog.HandlerOptions{})
+	if !assert.NotNil(t, err) {
+		return
+	}
+	assert.ErrorIs(t, err, clog.ErrInvalidHandlerOptions)
+	assert.ErrorContains(t, err, "missing GoogleProjectID")
+
+	handler, err := clog.NewHandler(&buf, clog.HandlerOptions{
+		AddSource:       true,
+		Level:           clog.LevelInfo,
+		GoogleProjectID: "my-project-id",
 	})
+	if !assert.Nil(t, err) {
+		return
+	}
 
 	logger := slog.New(handler)
 
@@ -37,7 +47,7 @@ func TestNewHandler(t *testing.T) {
 		clog.SpanIDKey, "banana",
 	)
 
-	fmt.Printf("%q\n", buf.String())
+	// fmt.Printf("%q\n", buf.String())
 
 	lines := strings.Split(buf.String(), "\n")
 	// the log lines are \n terminated, so the last line will always be empty since we split on \n
@@ -47,7 +57,7 @@ func TestNewHandler(t *testing.T) {
 	assert.Equal(t, 2, len(lines))
 
 	var warnEntry Entry
-	err := json.Unmarshal([]byte(lines[0]), &warnEntry)
+	err = json.Unmarshal([]byte(lines[0]), &warnEntry)
 	if err != nil {
 		t.Fatal(err)
 	}
