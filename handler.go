@@ -44,9 +44,9 @@ func NewHandler(w io.Writer, opts HandlerOptions) (*Handler, error) {
 
 // Handle implements [log/slog.Handler].
 func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
-	return h.handler.Handle(ctx,
-		trace.NewRecord(ctx, record, h.opts.GoogleProjectID),
-	)
+	record = trace.NewRecord(ctx, record, h.opts.GoogleProjectID)
+	record = dedupAttrs(record)
+	return h.handler.Handle(ctx, record)
 }
 
 // Enabled implements [log/slog.Handler].

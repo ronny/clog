@@ -1,11 +1,13 @@
 package clog_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"log/slog"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ronny/clog"
 	"github.com/stretchr/testify/assert"
@@ -14,16 +16,16 @@ import (
 func TestNewHandler(t *testing.T) {
 	t.Parallel()
 
-	buf := strings.Builder{}
+	buf := &strings.Builder{}
 
-	_, err := clog.NewHandler(&buf, clog.HandlerOptions{})
+	_, err := clog.NewHandler(buf, clog.HandlerOptions{})
 	if !assert.NotNil(t, err) {
 		return
 	}
 	assert.ErrorIs(t, err, clog.ErrInvalidHandlerOptions)
 	assert.ErrorContains(t, err, "missing GoogleProjectID")
 
-	handler, err := clog.NewHandler(&buf, clog.HandlerOptions{
+	handler, err := clog.NewHandler(buf, clog.HandlerOptions{
 		AddSource:       true,
 		Level:           clog.LevelInfo,
 		GoogleProjectID: "my-project-id",
@@ -126,40 +128,56 @@ func TestNewHandler(t *testing.T) {
 	assert.Equal(t, "banana", spanID)
 }
 
-type Entry map[string]any
+var benchmarkJSONHandler_HandleResult error
 
-func (e Entry) GetAny(key string) (any, bool) {
-	v, ok := e[key]
-	if !ok {
-		return "", false
+func BenchmarkJSONHandler_Handle(b *testing.B) {
+	buf := &bytes.Buffer{}
+	h := slog.NewJSONHandler(buf, &slog.HandlerOptions{Level: slog.LevelInfo})
+
+	ctx := context.Background()
+
+	b.ResetTimer()
+	var err error
+	for n := 0; n < b.N; n++ {
+		record := slog.NewRecord(time.Now(), slog.LevelInfo, "hello", 0)
+		record.AddAttrs(
+			slog.Attr{Key: "a", Value: slog.StringValue("one")},
+			slog.Attr{Key: "a", Value: slog.StringValue("two")},
+		)
+		err = h.Handle(ctx, record)
 	}
 
-	return v, true
+	// Always store the result to a package level variable
+	// so the compiler cannot eliminate the Benchmark itself.
+	benchmarkJSONHandler_HandleResult = err
 }
 
-func (e Entry) GetString(key string) (string, bool) {
-	v, ok := e.GetAny(key)
-	if !ok {
-		return "", false
+var benchmarkHandler_HandleResult error
+
+func BenchmarkHandler_Handle(b *testing.B) {
+	buf := &bytes.Buffer{}
+	h, err := clog.NewHandler(buf, clog.HandlerOptions{
+		Level:           slog.LevelInfo,
+		GoogleProjectID: "example",
+	})
+	if err != nil {
+		b.Fatal(err)
 	}
 
-	s, ok := v.(string)
-	if !ok {
-		return "", false
+	ctx := context.Background()
+
+	b.ResetTimer()
+	var e error
+	for n := 0; n < b.N; n++ {
+		record := slog.NewRecord(time.Now(), slog.LevelInfo, "hello", 0)
+		record.AddAttrs(
+			slog.Attr{Key: "a", Value: slog.StringValue("one")},
+			slog.Attr{Key: "a", Value: slog.StringValue("two")},
+		)
+		e = h.Handle(ctx, record)
 	}
 
-	return s, true
-}
-
-func (e Entry) GetMap(key string) (map[string]any, bool) {
-	v, ok := e.GetAny(key)
-	if !ok {
-		return nil, false
-	}
-
-	m, ok := v.(map[string]any)
-	if !ok {
-		return nil, false
-	}
-	return m, true
+	// Always store the result to a package level variable
+	// so the compiler cannot eliminate the Benchmark itself.
+	benchmarkHandler_HandleResult = e
 }
