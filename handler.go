@@ -56,12 +56,16 @@ func (h *Handler) Enabled(ctx context.Context, level slog.Level) bool {
 
 // WithAttrs implements [log/slog.Handler].
 func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	h.handler = h.handler.WithAttrs(attrs)
-	return h
+	return &Handler{
+		opts:    h.opts,
+		handler: h.handler.WithAttrs(attrs),
+	}
 }
 
 // WithGroup implements [log/slog.Handler].
 func (h *Handler) WithGroup(name string) slog.Handler {
-	h.handler = h.handler.WithGroup(name)
-	return h
+	return &Handler{
+		opts:    h.opts,
+		handler: h.handler.WithGroup(name),
+	}
 }
